@@ -101,6 +101,8 @@ def timestamp_natural_sub(timestamp, **fields):
         delta['minutes'] = fields['minutes']
     if fields.has_key('seconds'):
         delta['seconds'] = fields['seconds']
+    if fields.has_key('microseconds'):
+        delta['microseconds'] = fields['microseconds']
 
     dt = datetime.utcfromtimestamp(timestamp)
     return datetime_2_utctimestamp(dt - relativedelta(**delta))
@@ -124,6 +126,8 @@ def timestamp_natural_add(timestamp, **fields):
         delta['minutes'] = fields['minutes']
     if fields.has_key('seconds'):
         delta['seconds'] = fields['seconds']
+    if fields.has_key('microseconds'):
+        delta['microseconds'] = fields['microseconds']
 
     dt = datetime.utcfromtimestamp(timestamp)
     return datetime_2_utctimestamp(dt + relativedelta(**delta))
