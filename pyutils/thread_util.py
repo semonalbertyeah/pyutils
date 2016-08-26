@@ -43,3 +43,22 @@ def threaded(**options):
 
     return decorator
 
+
+def make_thread(target, **options):
+    return threaded(**options)(target)
+
+
+def wait_threads(tasks, timeout=5):
+    """
+        output:
+            bool -> if all tasks are finished.
+    """
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if len(filter(lambda t: t.is_alive(), tasks)) == 0:
+            return True
+
+        time.sleep(0.2)
+
+    return False
+
