@@ -62,3 +62,25 @@ def wait_threads(tasks, timeout=5):
 
     return False
 
+
+# thread safe decorator for function
+def thread_safe(func):
+
+    _thread_lock = threading.Lock()
+    def new_func(*args, **kwargs):
+        with _thread_lock:
+            return func(*args, **kwargs)
+
+    return new_func
+
+
+# thread safe decorator for class method
+def mthread_safe(method):
+    def new_method(self, *args, **kwargs):
+        if not hasattr(self, '_thread_lock_'):
+            self._thread_lock_ = threading.Lock()
+        with self._thread_lock_:
+            return method(self, *args, **kwargs)
+    return new_method
+
+
