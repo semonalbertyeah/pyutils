@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 
-import threading
+import threading, time
 
 def threaded(**options):
     """
