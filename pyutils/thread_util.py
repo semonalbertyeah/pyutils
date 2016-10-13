@@ -25,7 +25,7 @@ def threaded(**options):
 
         assert callable(func)
 
-        def new_func(*args, **kwargs):
+        def thread_gen(*args, **kwargs):
 
             t = threading.Thread(
                 target=func, 
@@ -39,7 +39,7 @@ def threaded(**options):
                 t.setName('%s-%d' % (t.name, t.ident))
             return t
 
-        return new_func
+        return thread_gen
 
     return decorator
 
@@ -84,3 +84,11 @@ def mthread_safe(method):
     return new_method
 
 
+if __name__ == '__main__':
+    print 'main thread id:', threading.current_thread().ident
+    @threaded()
+    def test():
+        print 'sub thread id:', threading.current_thread().ident
+
+    test_t = test()
+    test_t.join()

@@ -91,9 +91,11 @@ class SignalContext(object):
 
 
 class Daemon(object):
-    def __init__(self, pidfile, func=None, stdin=os.devnull, stdout=os.devnull, stderr=os.devnull):
+    def __init__(self, pidfile, func=None, args=(), kwargs={}, stdin=os.devnull, stdout=os.devnull, stderr=os.devnull):
         self.pidfn = pidfile
         self.func = func
+        self.args = list(args)
+        self.kwargs = kwargs
         self.stdin_fn = stdin
         self.stdout_fn = stdout
         self.stderr_fn = stderr
@@ -127,11 +129,13 @@ class Daemon(object):
         if os.path.exists(self.pidfn):
             os.remove(self.pidfn)
 
-    def run(self):
+    def run(self, *args, **kwargs):
         assert callable(self.func), 'invalid function'
-        return self.func()
+        if args or kwargs:
+            self.args, self.kwargs = args, kwargs
+        return self.func(*self.args, **self.kwargs)
 
-    def start(self):
+    def start(self, *args, **kwargs):
         pid = os.fork()
         assert pid >= 0, 'failed to call fork'
 
@@ -158,7 +162,7 @@ class Daemon(object):
         assert (self.pid is None), 'daemon is running, %d' % self.pid
         self.pid = os.getpid()
         try:
-            self.run()
+            self.run(*args, **kwargs)
         finally:
             self.del_pid_file()
 
@@ -179,9 +183,60 @@ class Daemon(object):
         self.del_pid_file()
 
 
+
+def daemonized(pidfile, **options):
+    """
+        make calling of func in a daemon
+        options:
+            start -> default: False
+            stdin -> default: os.devnull
+            stdout -> default: os.devnull
+            stderr -> default: os.devnull
+        Example:
+            pidfile = '/var/run/test.pid'
+            logfile = '/var/log/test.log'
+            @daemonized(pidfile, start=False, stdout=logfile, stderr=logfile)
+            def test(header, info='heartbeat'):
+                import time
+                while True:
+                    print '%s - %s' % (header, info)
+                    time.sleep(0.5)
+
+            test_daemon = test('Head', 'running')
+            test_daemon.start()
+            print test_daemon.pid
+            print test_daemon.running   # True
+            test_daemon.stop()  # send SIGTERM
+    """
+    def decorator(func):
+        start = bool(options.get('start', False))
+        stdin = options.get('stdin', os.devnull)
+        stdout = options.get('stdout', os.devnull)
+        stderr = options.get('stderr', os.devnull)
+
+        assert callable(func)
+
+        def daemon_gen(*args, **kwargs):
+            daemon = Daemon(
+                pidfile, 
+                func=func,
+                stdin=stdin, 
+                stdout=stdout, 
+                stderr=stderr
+            )
+
+            if start:
+                daemon.start()
+
+            return daemon
+
+        return daemon_gen
+
+    return decorator
+
 if __name__ == '__main__':
-    std_log = '/home/lwb/test.log'
-    pidfn = '/home/lwb/test.pid'
+    std_log = '/var/log/test.log'
+    pidfn = '/var/run/test.pid'
 
     context = SignalContext()
 
@@ -192,24 +247,39 @@ if __name__ == '__main__':
     def sigterm_handler(signum, frame):
         raise Termination, 'exit from SIGTERM'
 
-    def task():
-        import time
-        with context:
-            try:
-                while 1:
-                    print 'heart beat:', time.time()
-                    time.sleep(0.5)
-            except Termination as e:
-                print 'end'
+    # def task(header, info='hearbeat'):
+    #     import time
+    #     with context:
+    #         try:
+    #             while 1:
+    #                 print '%s - %s' % (header, info)
+    #                 time.sleep(0.5)
+    #         except Termination as e:
+    #             print 'end'
 
     # daemon = Daemon(
     #     pidfn,
+    #     # args=('head',),
+    #     # kwargs={'info': 'heatbeat info'},
     #     func=task, 
     #     stdout=std_log,
     #     stderr=std_log
     # )
 
-    # daemon.start()
-    task()
+    @daemonized(pidfn, start=False, stdout=std_log, stderr=std_log)
+    def task(header, info='hearbeat'):
+        import time
+        with context:
+            try:
+                while 1:
+                    print '%s - %s' % (header, info)
+                    time.sleep(0.5)
+            except (Termination,KeyboardInterrupt) as e:
+                print 'end'
+
+    daemon = task()
+
+    daemon.start('header..', info='heart beat...')
+    # task()
 
 
