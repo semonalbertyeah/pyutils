@@ -22,6 +22,74 @@ def close_all_files():
                 raise
 
 
+class SignalContext(object):
+    """
+        import signal
+        sig_context = SignalContext()
+
+        class Termination(BaseException):
+            pass
+
+        @sig_context.on(signal.SIGTERM, count=3)
+        def termination(signum, stack):
+            raise Termination, 'terminated'
+
+        def main():
+            import time
+            try:
+                with sig_context:
+                    while 1:
+                        print 'heartbeat'
+                        time.sleep(0.5)
+            except Termination as e:
+                print 'end'
+
+        if __name__ == '__main__':
+            main()  # keep print heartbeat until SIGTERM
+    """
+    def __init__(self, signal_actions={}):
+        self.sig_actions = signal_actions
+        self.original_actions = None
+
+    @property
+    def active(self):
+        return self.original_actions is not None
+
+    def register(self, signum, action):
+        self.sig_actions[signum] = action
+
+    def on(self, signum):
+        def decorator(func):
+            self.register(signum, func)
+            return func
+        return decorator
+
+    def activate(self):
+        assert not self.active, 'already active'
+
+        self.original_actions = {}
+        for signum in self.sig_actions.iterkeys():
+            self.original_actions[signum] = signal.getsignal(signum)
+
+        for signum, action in self.sig_actions.iteritems():
+            signal.signal(signum, action)
+
+
+    def deactivate(self):
+        if not self.active:
+            return
+        for signum, action in self.original_actions.iteritems():
+            signal.signal(signum, action)
+
+        self.original_actions = None
+
+    def __enter__(self):
+        self.activate()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.deactivate()
+
+
 class Daemon(object):
     def __init__(self, pidfile, func=None, stdin=os.devnull, stdout=os.devnull, stderr=os.devnull):
         self.pidfn = pidfile
@@ -114,31 +182,34 @@ class Daemon(object):
 if __name__ == '__main__':
     std_log = '/home/lwb/test.log'
     pidfn = '/home/lwb/test.pid'
-    
+
+    context = SignalContext()
+
     class Termination(BaseException):
         pass
-    
+
+    @context.on(signal.SIGTERM)
     def sigterm_handler(signum, frame):
         raise Termination, 'exit from SIGTERM'
-    
-    def task():
-        signal.signal(signal.SIGTERM, sigterm_handler)
-    
-        import time
-        try:
-            while 1:
-                print 'heart beat:', time.time()
-                time.sleep(0.5)
-        except Termination as e:
-            print 'end'
-    
-    daemon = Daemon(
-        pidfn,
-        func=task, 
-        stdout=std_log,
-        stderr=std_log
-    )
 
-    daemon.start()
+    def task():
+        import time
+        with context:
+            try:
+                while 1:
+                    print 'heart beat:', time.time()
+                    time.sleep(0.5)
+            except Termination as e:
+                print 'end'
+
+    # daemon = Daemon(
+    #     pidfn,
+    #     func=task, 
+    #     stdout=std_log,
+    #     stderr=std_log
+    # )
+
+    # daemon.start()
+    task()
 
 
