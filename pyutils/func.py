@@ -21,11 +21,13 @@ def proxy_method(member, method):
             a = A([1,2,3])
             print a[0]  # 1
     """
+    members = [member]
     def proxy(self, *args, **kwargs):
-        if callable(attr):
-            attr = attr()
+        member = members[0]
+        if callable(member):
+            member = member()
         else:
-            attr = getattr(self, attr)
-        return getattr(attr, method)(*args, **kwargs)
+            member = getattr(self, member)
+        return getattr(member, method)(*args, **kwargs)
     return proxy
 
