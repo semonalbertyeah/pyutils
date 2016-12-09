@@ -4,6 +4,8 @@
     utilities to convert data.
 """
 
+from socket import inet_aton, inet_ntoa
+
 def int_2_byte_array(value, width):
     """
         convert integer value to array of ubyte
