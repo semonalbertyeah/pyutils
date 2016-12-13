@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
 
-import threading, time
+import threading, thread, time
+
+nothing = object()
 
 def threaded(**options):
     """
@@ -45,7 +47,7 @@ def threaded(**options):
 
 
 def make_thread(target, **options):
-    return threaded(**options)(target)
+    return threaded(**options)(target)()
 
 
 def wait_threads(tasks, timeout=5):
@@ -75,14 +77,51 @@ def thread_safe(func):
 
 
 # thread safe decorator for class method
-def mthread_safe(method):
-    def new_method(self, *args, **kwargs):
-        if not hasattr(self, '_thread_lock_'):
-            self._thread_lock_ = threading.Lock()
-        with self._thread_lock_:
-            return method(self, *args, **kwargs)
-    return new_method
+# def mthread_safe(method):
+#     def new_method(self, *args, **kwargs):
+#         if not hasattr(self, '_thread_lock_'):
+#             self._thread_lock_ = threading.Lock()
+#         with self._thread_lock_:
+#             return method(self, *args, **kwargs)
+#     return new_method
 
+
+def mthread_safe(**options):
+    """
+        options:
+            lock_name  -- the attribute name of thread lock
+        Usage:
+            class Test(object):
+                @mthread_safe(lock_name='_lock1')
+                def test11(self):
+                    print 'test11'
+
+                @mthread_safe(lock_name='lock1')
+                def test12(self):
+                    print 'test12'
+
+                @mthread_safe(lock_name='lock2')
+                def test21(self):
+                    print 'test21'
+
+    """
+
+    def decorator(method):
+        lock_name = options.get('lock_name', '_thread_lock_')
+        def new_method(self, *args, **kwargs):
+            lock = getattr(self, lock_name, nothing)
+            if lock is nothing:
+                lock = threading.Lock()
+                setattr(self, lock_name, lock)
+            assert isinstance(lock, thread.LockType), \
+                    "%s is not instance of threading.Lock, maybe a conflict" % lock_name
+
+            with lock:
+                return method(self, *args, **kwargs)
+
+        return new_method
+
+    return decorator
 
 if __name__ == '__main__':
     print 'main thread id:', threading.current_thread().ident

@@ -110,13 +110,13 @@ class SimpleCache(object):
     ##################
 
     # @_threadsafe
-    @mthread_safe
+    @mthread_safe()
     @_maintained
     def __iter__(self):
         return iter(self.cache)
 
     # @_threadsafe
-    @mthread_safe
+    @mthread_safe()
     @_maintained
     def __getitem__(self, given):
         """
@@ -126,7 +126,7 @@ class SimpleCache(object):
         return self.cache[given]
 
     # @_threadsafe
-    @mthread_safe
+    @mthread_safe()
     @_maintained
     def add(self, *records):
         """
@@ -135,7 +135,7 @@ class SimpleCache(object):
         self.cache.extend(records)
 
     # @_threadsafe
-    @mthread_safe
+    @mthread_safe()
     @_maintained
     def filter(self, filter_cond=None):
         """
@@ -149,7 +149,7 @@ class SimpleCache(object):
             return copy(self.cache)
 
     # @_threadsafe
-    @mthread_safe
+    @mthread_safe()
     @_maintained
     def exclude(self, exclude_cond=None):
         """
@@ -316,7 +316,7 @@ class SqliteStore(object):
     # APIs
     ###################
 
-    @mthread_safe
+    @mthread_safe()
     @_maintained
     def get_cols(self):
 
@@ -325,7 +325,7 @@ class SqliteStore(object):
         return [desc[0] for desc in cursor.description]
 
 
-    @mthread_safe
+    @mthread_safe()
     @_maintained
     def add(self, *values):
         if not values:
@@ -351,7 +351,7 @@ class SqliteStore(object):
         return values
 
 
-    @mthread_safe
+    @mthread_safe()
     @_maintained
     def filter(self, filter_cond=None):
         return self._filter(filter_cond)
@@ -371,7 +371,7 @@ class SqliteStore(object):
         self._exc_cond = None
         return values
 
-    @mthread_safe
+    @mthread_safe()
     @_maintained
     def exclude(self, exclude_cond=None):
         return self._exclude(exclude_cond=exclude_cond)
