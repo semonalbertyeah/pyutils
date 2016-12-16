@@ -30,7 +30,7 @@ class SignalContext(object):
         class Termination(BaseException):
             pass
 
-        @sig_context.on(signal.SIGTERM, count=3)
+        @sig_context.on(signal.SIGTERM)
         def termination(signum, stack):
             raise Termination, 'terminated'
 

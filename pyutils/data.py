@@ -58,6 +58,19 @@ def ip_2_byte_array(ip):
         assert isinstance(i, int) and (ip >= 0 and ip <= 0xffffffff)
         return int_2_byte_array(ip, 4)
 
+def ip_2_int(ip):
+    """
+        convert an IP addr to a 32-bit int
+        ip: display string, 32-bit int
+    """
+    if isinstance(ip, int):
+        assert ip >= 0 and ip <= 0xffffffff
+        return ip
+    else:
+        assert isinstance(ip, (str, unicode))
+        ip = inet_aton(ip)
+        return byte_array_2_int([ord(i) for i in ip])
+
 
 def ip_pretty(ip):
     """

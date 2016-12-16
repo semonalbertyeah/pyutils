@@ -47,7 +47,18 @@ def threaded(**options):
 
 
 def make_thread(target, **options):
-    return threaded(**options)(target)()
+    """
+        options:
+            args,
+            kwargs
+            name -> default : decorated function name
+            daemon -> default : False
+            start -> default : True
+    """
+
+    args = options.pop('args', ())
+    kwargs = options.pop('kwargs', {})
+    return threaded(**options)(target)(*args, **kwargs)
 
 
 def wait_threads(tasks, timeout=5):
