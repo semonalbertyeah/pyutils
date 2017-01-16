@@ -31,3 +31,12 @@ def proxy_method(member, method):
         return getattr(member, method)(*args, **kwargs)
     return proxy
 
+
+def singleton(cls):
+    """
+        As you can see, 
+        just replace the class with an instance.
+    """
+    return cls()
+
+
