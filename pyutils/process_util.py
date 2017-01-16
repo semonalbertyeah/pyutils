@@ -184,55 +184,98 @@ class Daemon(object):
 
 
 
+#def daemonized(pidfile, **options):
+#    """
+#        make calling of func in a daemon
+#        options:
+#            start -> default: False
+#            stdin -> default: os.devnull
+#            stdout -> default: os.devnull
+#            stderr -> default: os.devnull
+#        Example:
+#            pidfile = '/var/run/test.pid'
+#            logfile = '/var/log/test.log'
+#            @daemonized(pidfile, start=False, stdout=logfile, stderr=logfile)
+#            def test(header, info='heartbeat'):
+#                import time
+#                while True:
+#                    print '%s - %s' % (header, info)
+#                    time.sleep(0.5)
+#
+#            test_daemon = test('Head', 'running')
+#            test_daemon.start()
+#            print test_daemon.pid
+#            print test_daemon.running   # True
+#            test_daemon.stop()  # send SIGTERM
+#    """
+#    def decorator(func):
+#        start = bool(options.get('start', False))
+#        stdin = options.get('stdin', os.devnull)
+#        stdout = options.get('stdout', os.devnull)
+#        stderr = options.get('stderr', os.devnull)
+#
+#        assert callable(func)
+#
+#        def daemon_gen(*args, **kwargs):
+#            daemon = Daemon(
+#                pidfile, 
+#                func=func,
+#                stdin=stdin, 
+#                stdout=stdout, 
+#                stderr=stderr
+#            )
+#
+#            if start:
+#                daemon.start()
+#
+#            return daemon
+#
+#        return daemon_gen
+#
+#    return decorator
+
+
 def daemonized(pidfile, **options):
     """
         make calling of func in a daemon
         options:
-            start -> default: False
             stdin -> default: os.devnull
             stdout -> default: os.devnull
             stderr -> default: os.devnull
         Example:
             pidfile = '/var/run/test.pid'
             logfile = '/var/log/test.log'
-            @daemonized(pidfile, start=False, stdout=logfile, stderr=logfile)
-            def test(header, info='heartbeat'):
+            @daemonized(pidfile, stdout=logfile, stderr=logfile)
+            def test_daemon(header, info='heartbeat'):
                 import time
                 while True:
                     print '%s - %s' % (header, info)
                     time.sleep(0.5)
 
-            test_daemon = test('Head', 'running')
             test_daemon.start()
             print test_daemon.pid
             print test_daemon.running   # True
             test_daemon.stop()  # send SIGTERM
     """
     def decorator(func):
-        start = bool(options.get('start', False))
         stdin = options.get('stdin', os.devnull)
         stdout = options.get('stdout', os.devnull)
         stderr = options.get('stderr', os.devnull)
 
         assert callable(func)
 
-        def daemon_gen(*args, **kwargs):
-            daemon = Daemon(
-                pidfile, 
-                func=func,
-                stdin=stdin, 
-                stdout=stdout, 
-                stderr=stderr
-            )
+        daemon = Daemon(
+            pidfile, 
+            func=func,
+            stdin=stdin, 
+            stdout=stdout, 
+            stderr=stderr
+        )
 
-            if start:
-                daemon.start()
-
-            return daemon
-
-        return daemon_gen
+        return daemon
 
     return decorator
+
 
 if __name__ == '__main__':
     std_log = '/var/log/test.log'
@@ -277,9 +320,6 @@ if __name__ == '__main__':
             except (Termination,KeyboardInterrupt) as e:
                 print 'end'
 
-    daemon = task()
-
-    daemon.start('header..', info='heart beat...')
-    # task()
+    task.start('header..', info='heart beat...')
 
 
