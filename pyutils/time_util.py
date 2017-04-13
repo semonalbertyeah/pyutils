@@ -1,8 +1,42 @@
 # -*- coding:utf-8 -*-
 
+import time
+
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 from calendar import timegm
+
+
+def wait(timeout, precision=0.05, break_cond=None):
+    """
+        wait until timeout.
+        input:
+            timeout -> unit: seconds
+            precision -> between how many seconds, the break_cond will be checked.
+            break_cond -> break condition function
+                            function () -> bool
+
+        output:
+            bool:
+                False -> timeout
+                True -> break condition triggered.
+    """
+    timeout = float(timeout)
+    assert timeout >= 0
+    precision = float(precision)
+    assert precision > 0
+
+    counter = 0
+    while counter < timeout:
+        if break_cond:
+            if break_cond():
+                return True
+        time.sleep(precision)
+        counter += precision
+
+    return False
+
+
 
 def is_whole_hour(utc_time):
     """

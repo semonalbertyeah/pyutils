@@ -31,4 +31,3 @@ def proxy_method(member, method):
         return getattr(member, method)(*args, **kwargs)
     return proxy
 
-

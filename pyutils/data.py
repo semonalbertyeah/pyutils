@@ -36,8 +36,9 @@ def assure_bin_data(data):
         assure that "data" is available binary data.
         bin data:
             str
-            or
-            list of 8-bit integers
+            [8-bit int]
+        return:
+            [8-bit int]
     """
     if isinstance(data, str):
         data = [ord(i) for i in data]
@@ -51,6 +52,7 @@ def assure_bin_data(data):
 def ip_2_byte_array(ip):
     """
         convert an IP value into [8-bit int] format.
+        ip: display string, 32-bit integer.
     """
     if isinstance(ip, (str, unicode)):
         return [ord(i) for i in inet_aton(ip)]
@@ -74,7 +76,7 @@ def ip_2_int(ip):
 
 def ip_pretty(ip):
     """
-        return string format IP value.
+        return display string format IP value.
         ip: 4-byte int, [4 8-bit int], str binary format
     """
     if isinstance(ip, int):

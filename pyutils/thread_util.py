@@ -3,26 +3,6 @@
 import threading, thread, time
 
 
-
-
-class Flag(object):
-    """
-        A flag indicate true or false.
-    """
-    def __init__(self, val=True):
-        self.__val = bool(val)
-
-    def __bool__(self):
-        return bool(self.__val)
-
-    __nonzero__ = __bool__
-
-    def set_true(self):
-        self.__val = True
-
-    def set_false(self):
-        self.__val = False
-
 nothing = object()
 
 def threaded(**options):
@@ -154,6 +134,30 @@ def mthread_safe(**options):
         return new_method
 
     return decorator
+
+
+class Flag(object):
+    """
+        A flag indicate true or false.
+    """
+    def __init__(self, val=True):
+        self.__val = bool(val)
+
+    def __bool__(self):
+        return bool(self.__val)
+
+    __nonzero__ = __bool__
+
+    # @mthread_safe()
+    def set_true(self):
+        self.__val = True
+
+    # @mthread_safe()
+    def set_false(self):
+        self.__val = False
+
+
+
 
 if __name__ == '__main__':
     print 'main thread id:', threading.current_thread().ident
